@@ -1,0 +1,23 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #87CEEB; /* Cielo azul */
+    overflow: hidden;
+    font-family: 'Arial', sans-serif;
+}
+
+#ui-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: white;
+    text-shadow: 2px 2px 0 #000;
+    z-index: 10;
+}
+
+canvas {
+    display: block;
+    cursor: crosshair; /* Simula la mira de un arma */
+    /* Fondo con gradiente que simula el cielo y el suelo */
+    background: linear-gradient(to bottom, #87CEEB 70%, #556B2F 100%); 
+}
