@@ -1,23 +1,51 @@
-body {
+body, html {
     margin: 0;
     padding: 0;
-    background-color: #87CEEB; /* Cielo azul */
+    width: 100%;
+    height: 100%;
+    
+    /* --- INTEGRACIÓN DE TU IMAGEN DE FONDO --- */
+    /* La ruta asume que el CSS está en assets/css/ y la imagen en assets/img/ */
+    background-image: url('../img/fondo.jpg');
+    background-size: cover; /* Hace que la imagen cubra toda la pantalla */
+    background-position: center; /* Centra la imagen */
+    background-repeat: no-repeat; /* Evita que la imagen se repita tipo mosaico */
+    
     overflow: hidden;
-    font-family: 'Arial', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Efecto Glassmorphism (Cristal) para el panel de puntos */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.15); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); 
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
 #ui-container {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: 30px;
+    left: 30px;
+    padding: 15px 35px;
     color: white;
-    text-shadow: 2px 2px 0 #000;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8); /* Sombra al texto para que resalte sobre el paisaje */
     z-index: 10;
+    pointer-events: none; 
+}
+
+h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 1px;
 }
 
 canvas {
     display: block;
-    cursor: crosshair; /* Simula la mira de un arma */
-    /* Fondo con gradiente que simula el cielo y el suelo */
-    background: linear-gradient(to bottom, #87CEEB 70%, #556B2F 100%); 
+    cursor: crosshair;
+    width: 100vw;
+    height: 100vh;
 }

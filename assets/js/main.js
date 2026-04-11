@@ -2,7 +2,6 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 
-// Ajustar el canvas al tamaño de la ventana
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
@@ -10,87 +9,90 @@ let score = 0;
 let targets = [];
 let spawnTimer = 0;
 
+// Cargar las imágenes representativas (Punto 2)
+const imgLata = new Image();
+imgLata.src = 'assets/img/lata.png'; // Asegúrate de tener este archivo
+
+const imgPato = new Image();
+imgPato.src = 'assets/img/pato.png'; // Asegúrate de tener este archivo
+
 class Target {
     constructor() {
-        // Regla de negocio: Aleatoriedad para elegir el tipo de objetivo
         this.type = Math.random() > 0.5 ? 'can' : 'duck';
-        this.radius = 30;
+        // Radio lógico para la detección de clics
+        this.radius = 45; 
         
-        // Aparecen aleatoriamente en el eje X, dentro de los límites
+        // Posición X aleatoria dentro de la pantalla
         this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
-        // Inician su movimiento desde abajo del suelo
-        this.y = canvas.height + this.radius; 
+        // Inician su movimiento desde fuera de la pantalla, por ABAJO
+        this.y = canvas.height + this.radius + 20; 
         
-        // Velocidad en X (se mueven hacia la izquierda o derecha aleatoriamente)
-        this.vx = (Math.random() - 0.5) * 8; 
-        // Fuerza de salto hacia arriba
-        this.vy = -(Math.random() * 6 + 10);  
+        // Velocidad horizontal (deriva leve)
+        this.vx = (Math.random() - 0.5) * 5; 
+        // Fuerza de salto hacia ARRIBA (valores negativos en canvas suben)
+        this.vy = -(Math.random() * 8 + 14);  
         
-        // La gravedad hace que la velocidad Y disminuya y comiencen a caer
-        this.gravity = 0.15; 
+        // Gravedad constante que los frena y luego los hace caer
+        this.gravity = 0.25; 
         this.markedForDeletion = false;
     }
 
     update() {
         this.x += this.vx;
         this.y += this.vy;
-        this.vy += this.gravity; 
+        this.vy += this.gravity; // Aplica la física de caída
 
-        // Rebote en las paredes laterales para mantenerlos en pantalla
+        // Rebote en las paredes laterales
         if (this.x - this.radius < 0 || this.x + this.radius > canvas.width) {
             this.vx *= -1;
         }
 
-        // Desaparecen cuando caen por debajo de la pantalla
-        if (this.y > canvas.height + this.radius) {
+        // Si caen nuevamente por el borde inferior (y están bajando), se eliminan
+        if (this.y > canvas.height + this.radius + 50 && this.vy > 0) {
             this.markedForDeletion = true;
         }
     }
 
     draw(ctx) {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        const imgToDraw = this.type === 'can' ? imgLata : imgPato;
         
-        // Diferenciación visual de los objetivos
-        if (this.type === 'can') {
-            ctx.fillStyle = '#C0C0C0'; // Lata metálica
-            ctx.strokeStyle = '#808080';
+        // Dibujar la imagen si ya se cargó en el navegador
+        if (imgToDraw.complete && imgToDraw.naturalWidth !== 0) {
+            ctx.drawImage(
+                imgToDraw, 
+                this.x - this.radius, 
+                this.y - this.radius, 
+                this.radius * 2, 
+                this.radius * 2
+            );
         } else {
-            ctx.fillStyle = '#8B4513'; // Pato
-            ctx.strokeStyle = '#5c2e0b';
+            // Fallback: Si no hay imagen, dibuja un círculo temporal
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = this.type === 'can' ? 'silver' : 'brown';
+            ctx.fill();
+            ctx.closePath();
         }
-        
-        ctx.fill();
-        ctx.lineWidth = 4;
-        ctx.stroke();
-        ctx.closePath();
-
-        // Texto indicativo en el centro
-        ctx.fillStyle = 'white';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.font = '12px Arial bold';
-        ctx.fillText(this.type === 'can' ? 'LATA' : 'PATO', this.x, this.y);
     }
 }
 
-// Evento de disparo
+// Evento para eliminar objetos con el Mouse (Punto 3)
 canvas.addEventListener('mousedown', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    // Recorremos de atrás hacia adelante para disparar al objeto que está más al frente
+    // Recorremos el arreglo de forma inversa para dar prioridad al objeto más al frente
     for (let i = targets.length - 1; i >= 0; i--) {
         const target = targets[i];
         
-        // Teorema de Pitágoras para colisión de punto y círculo
+        // Distancia entre el clic y el centro del objeto
         const dx = mouseX - target.x;
         const dy = mouseY - target.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
+        // Si dimos en el blanco
         if (distance <= target.radius) {
-            // Regla de negocio: Latas dan puntos, patos restan
             if (target.type === 'can') {
                 score += 100;
             } else {
@@ -98,40 +100,37 @@ canvas.addEventListener('mousedown', (e) => {
             }
             scoreElement.innerText = score;
             
-            // Destruir el objeto
+            // Eliminamos el objeto tocado
             target.markedForDeletion = true;
-            break; // Solo permitimos impactar un objetivo por disparo
+            break; // Salimos del ciclo para no eliminar dos objetos con un solo clic
         }
     }
 });
 
 function animate() {
+    // Es vital limpiar el canvas usando clearRect transparente
+    // para que el CSS del body (fondo y efecto cristal) siga siendo visible
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Generador de objetivos
     spawnTimer++;
-    if (spawnTimer % 50 === 0) { // Un nuevo objetivo cada ~50 frames
+    if (spawnTimer % 45 === 0) { 
         targets.push(new Target());
         spawnTimer = 0;
     }
 
-    // Actualizar posiciones y renderizar
     targets.forEach(target => {
         target.update();
         target.draw(ctx);
     });
 
-    // Limpiar memoria: eliminar los objetos marcados
     targets = targets.filter(target => !target.markedForDeletion);
 
     requestAnimationFrame(animate);
 }
 
-// Responsividad básica
 window.addEventListener('resize', () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 });
 
-// Arrancar el ciclo
 animate();
