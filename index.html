@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caza de Latas y Patos</title>
+    <title>Caza de Latas y Patos - Versión Final</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <link rel="stylesheet" href="assets/css/styles.css">
@@ -12,17 +12,38 @@
 
     <div class="container-fluid d-flex justify-content-center align-items-center vh-100">
         
-        <div id="game-container" class="position-relative overflow-hidden glass-panel">
+        <div id="game-container" class="position-relative overflow-hidden">
             
             <div class="ui-overlay d-flex justify-content-between p-3 w-100">
                 <div class="stats-box text-white">
                     <p class="m-0 small text-uppercase fw-bold">Nivel: <span id="level">1</span></p>
                     <h3 class="m-0 fw-bold text-success">Puntos: <span id="score">0</span></h3>
                 </div>
-                <div class="stats-box text-white text-end">
+                <div class="stats-box text-white text-center">
                     <p class="m-0 small text-uppercase fw-bold">Récord</p>
                     <h3 class="m-0 text-warning"><span id="high-score">0</span></h3>
                 </div>
+            </div>
+
+            <div id="instructions-screen" class="position-absolute top-50 start-50 translate-middle text-center text-white p-4">
+                <h2 class="fw-bold mb-3 text-warning">🎯 Instrucciones</h2>
+                <p class="fs-5">¡Demuestra tu puntería!</p>
+                
+                <div class="d-flex justify-content-around align-items-center my-4 bg-black bg-opacity-25 p-3 rounded">
+                    <div>
+                        <span class="fs-1">🥫</span>
+                        <p class="text-success fw-bold m-0">+100 Pts</p>
+                        <small>¡Dispárales!</small>
+                    </div>
+                    <div>
+                        <span class="fs-1">🦆</span>
+                        <p class="text-danger fw-bold m-0">-100 Pts</p>
+                        <small>¡Evítalos!</small>
+                    </div>
+                </div>
+                
+                <p class="small text-light">Sube de nivel y aumenta la dificultad cada 500 puntos.</p>
+                <button id="start-btn" class="btn btn-warning btn-lg fw-bold mt-3 px-5 rounded-pill shadow text-dark">¡Empezar a Jugar!</button>
             </div>
 
             <canvas id="gameCanvas"></canvas>
