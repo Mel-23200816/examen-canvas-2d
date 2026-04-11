@@ -5,52 +5,115 @@ body, html {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' preserveAspectRatio='none' viewBox='0 0 100 100'%3E%3Cpolygon points='0,0 45,0 15,55' fill='%23132d11' stroke='%23ffffff11' stroke-width='0.3'/%3E%3Cpolygon points='45,0 100,0 100,35' fill='%230b1a2d' stroke='%23ffffff11' stroke-width='0.3'/%3E%3Cpolygon points='100,35 65,65 100,100' fill='%232a1e16' stroke='%23ffffff11' stroke-width='0.3'/%3E%3Cpolygon points='0,100 35,100 15,55' fill='%231a334d' stroke='%23ffffff11' stroke-width='0.3'/%3E%3C/svg%3E");
     background-size: cover;
     overflow: hidden;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
 }
 
+/* Contenedor del Juego: Ajustado para ser más ancho hacia los lados */
 #game-container {
-    width: 70vw; height: 70vh;
-    background-image: url('../img/paisaje.jpeg');
+    width: 85vw;   /* Aumentado al 85% del ancho de la ventana */
+    height: 70vh;  /* Ajustado al 70% de la altura de la ventana */
+    
+    background-image: url('../img/paisaje.jpeg'); 
     background-size: cover;
     background-position: center;
     border: 4px solid #111;
     border-radius: 20px;
     box-shadow: 0 0 40px rgba(0,0,0,0.7);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    
+    /* Cursor personalizado */
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="none" stroke="red" stroke-width="2"/><line x1="16" y1="0" x2="16" y2="32" stroke="red" stroke-width="2"/><line x1="0" y1="16" x2="32" y2="16" stroke="red" stroke-width="2"/></svg>') 16 16, crosshair;
 }
 
+canvas { display: block; width: 100%; height: 100%; }
+
+/* --- ESTILOS UI --- */
+/* Panel Superior (Puntos/Récord) */
+.ui-overlay-top {
+    position: absolute;
+    top: 0; left: 0;
+    z-index: 100; /* Debajo de las instrucciones */
+    pointer-events: none; /* No bloquea clics */
+}
+
+/* Panel Lateral (Cacería) */
+#sidebar-stats {
+    width: 90px; height: fit-content;
+    position: absolute;
+    right: 15px; top: 50%;
+    transform: translateY(-50%);
+    z-index: 90;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+}
+
+/* Cajas de estadísticas (Superior y Lateral) */
+.stats-box, .glass-panel {
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+}
+
+.stats-box {
+    padding: 8px 15px;
+    width: fit-content; height: fit-content;
+}
+
+/* Pantalla de Derrota / Instrucciones */
+#overlay-screen {
+    background-color: #111827;
+    border: 3px solid #ffc107;
+    border-radius: 15px;
+    width: 80%; max-width: 420px;
+    z-index: 200; /* Encima de todo */
+    box-shadow: 0 0 30px rgba(0,0,0,0.9);
+}
+
+/* Pantalla de Nivel */
+#level-up-screen {
+    background: rgba(0,0,0,0.8);
+    z-index: 110;
+}
+
+.level-card {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 40px; border-radius: 25px;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+}
+
+/* --- ESTILOS COMPONENTES GENERALES --- */
 .custom-bar {
     background: rgba(10, 15, 25, 0.95) !important;
     backdrop-filter: blur(10px);
     z-index: 1000;
 }
 
-#sidebar-stats {
-    width: 90px; height: fit-content;
-    position: absolute; right: 15px; top: 50%;
-    transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    z-index: 50;
+#instructions-screen button, #overlay-screen button { cursor: pointer; }
+
+/* --- NUEVA REGLA: CORRECCIÓN DE ICONOS ESTIRADOS --- */
+/* Esta regla forza a los iconos de los objetivos a mantener su proporción */
+#game-container img {
+    /* Ajusta este tamaño (40px) si quieres los iconos más grandes o pequeños, 
+       pero mantén width y height iguales. */
+    width: 40px !important; 
+    height: 40px !important; 
+    
+    /* TRUCO CLAVE: Mantiene la proporción original de la imagen 
+       sin estirarla, como si fuera un 'crop' o 'fit' de Photoshop */
+    object-fit: contain !important; 
+    
+    /* Pequeño margen para que no se peguen a los números */
+    margin-bottom: 5px; 
 }
 
-/* Modificación: Cuadros reducidos al texto */
-.stats-box {
-    background: rgba(0, 0, 0, 0.75);
-    padding: 10px 15px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    width: fit-content;  /* Se ajusta al ancho del texto */
-    height: fit-content; /* Se ajusta al alto del texto */
+/* --- Ajustes adicionales para la alineación en el panel lateral --- */
+#sidebar-stats .mb-3, #sidebar-stats .text-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
 }
-
-#overlay-screen {
-    background-color: #111827;
-    border: 3px solid #ffc107;
-    border-radius: 15px;
-    width: 80%; max-width: 420px;
-    z-index: 100;
-}
-
-canvas { display: block; width: 100%; height: 100%; }

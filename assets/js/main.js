@@ -33,9 +33,23 @@ class FloatingText {
     }
     update() { this.y += this.vy; this.opacity -= 0.02; }
     draw() {
-        ctx.save(); ctx.globalAlpha = this.opacity;
-        ctx.fillStyle = this.color; ctx.font = 'bold 24px Arial';
-        ctx.textAlign = 'center'; ctx.fillText(this.text, this.x, this.y); ctx.restore();
+        ctx.save(); 
+        ctx.globalAlpha = this.opacity;
+        
+        // CORRECCIÓN: Fuente más grande y contorno negro para legibilidad
+        ctx.font = 'bold 32px Arial'; 
+        ctx.textAlign = 'center'; 
+        
+        // Contorno negro grueso
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = `rgba(0, 0, 0, ${this.opacity})`;
+        ctx.strokeText(this.text, this.x, this.y);
+        
+        // Color principal
+        ctx.fillStyle = this.color; 
+        ctx.fillText(this.text, this.x, this.y); 
+        
+        ctx.restore();
     }
 }
 
@@ -77,9 +91,7 @@ function gameOver(reason) {
 }
 
 canvas.addEventListener('mousedown', (e) => {
-    // Si no está jugando o está en pausa de nivel, ignorar clics
     if (!isPlaying || isTransitioning) return;
-    
     const r = canvas.getBoundingClientRect();
     const mx = (e.clientX - r.left) * (canvas.width / r.width), my = (e.clientY - r.top) * (canvas.height / r.height);
 
@@ -104,44 +116,29 @@ canvas.addEventListener('mousedown', (e) => {
 
 function updateUI() {
     scoreDisplay.innerText = score; cansDisplay.innerText = cansShot; ducksDisplay.innerText = ducksShot;
-    
-    // Calcular el nivel actual
     let newLevel = Math.floor(score / 500) + 1;
-    
-    // Lógica para detectar el paso de nivel
     if (newLevel > level) {
         level = newLevel;
         speedMult = 1 + (level - 1) * 0.15; 
         spawnRate = Math.max(15, 60 - level * 5);
-        
-        // --- INICIA TRANSICIÓN DE NIVEL ---
         isTransitioning = true;
         levelUpText.innerText = 'Nivel ' + level;
-        
-        // Muestra la pantalla negra con clases de Bootstrap
         levelUpScreen.classList.remove('d-none');
         levelUpScreen.classList.add('d-flex');
-        
-        // Limpia la pantalla de objetos viejos
-        targets = [];
-        floatTexts = [];
-        
-        // Pausa de 2 segundos (2000 ms)
+        targets = []; floatTexts = [];
         setTimeout(() => {
             levelUpScreen.classList.remove('d-flex');
             levelUpScreen.classList.add('d-none');
-            isTransitioning = false; // Reanuda el juego
+            isTransitioning = false; 
         }, 2000);
     }
-    
     levelDisplay.innerText = level;
     if (score > highScore) { highScore = score; highScoreDisplay.innerText = highScore; localStorage.setItem('hs_itp', highScore); }
 }
 
 function initGame() {
     score = 0; level = 1; cansShot = 0; ducksShot = 0; consecutiveDucks = 0; targets = []; floatTexts = [];
-    isTransitioning = false;
-    isPlaying = true; overlay.style.display = 'none'; updateUI(); animate();
+    isTransitioning = false; isPlaying = true; overlay.style.display = 'none'; updateUI(); animate();
 }
 
 startBtn.onclick = initGame;
@@ -149,20 +146,12 @@ restartBtn.onclick = initGame;
 
 function animate() {
     if (!isPlaying) return;
-    
-    // Si está en transición, sigue ejecutando requestAnimationFrame pero NO actualiza nada
-    if (isTransitioning) {
-        requestAnimationFrame(animate);
-        return;
-    }
-
+    if (isTransitioning) { requestAnimationFrame(animate); return; }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     spawnTimer++;
     if (spawnTimer >= spawnRate) { targets.push(new Target()); spawnTimer = 0; }
-    
     targets.forEach(t => { t.update(); t.draw(); });
     floatTexts.forEach((ft, i) => { ft.update(); ft.draw(); if (ft.opacity <= 0) floatTexts.splice(i, 1); });
-    
     targets = targets.filter(t => !t.marked);
     requestAnimationFrame(animate);
 }
