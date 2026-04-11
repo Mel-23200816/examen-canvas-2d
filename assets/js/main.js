@@ -1,136 +1,119 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const scoreElement = document.getElementById('score');
+const container = document.getElementById('game-container');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// Elementos UI
+const scoreDisplay = document.getElementById('score');
+const highScoreDisplay = document.getElementById('high-score');
+const levelDisplay = document.getElementById('level');
 
+// Ajustar resolución del canvas al tamaño del contenedor de Bootstrap
+function resize() {
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Variables de juego (Punto 6)
 let score = 0;
+let highScore = localStorage.getItem('duckHuntHighScore') || 0;
+let level = 1;
 let targets = [];
 let spawnTimer = 0;
+let spawnRate = 60; // Frames entre aparición
+let speedMultiplier = 1;
 
-// Cargar las imágenes representativas (Punto 2)
-const imgLata = new Image();
-imgLata.src = 'assets/img/lata.png'; // Asegúrate de tener este archivo
+highScoreDisplay.innerText = highScore;
 
-const imgPato = new Image();
-imgPato.src = 'assets/img/pato.png'; // Asegúrate de tener este archivo
+// Carga de imágenes
+const imgLata = new Image(); imgLata.src = 'assets/img/lata.png';
+const imgPato = new Image(); imgPato.src = 'assets/img/pato.png';
 
 class Target {
     constructor() {
-        this.type = Math.random() > 0.5 ? 'can' : 'duck';
-        // Radio lógico para la detección de clics
-        this.radius = 45; 
-        
-        // Posición X aleatoria dentro de la pantalla
+        this.type = Math.random() > 0.4 ? 'can' : 'duck';
+        this.radius = 35;
         this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
-        // Inician su movimiento desde fuera de la pantalla, por ABAJO
-        this.y = canvas.height + this.radius + 20; 
+        this.y = canvas.height + this.radius;
         
-        // Velocidad horizontal (deriva leve)
-        this.vx = (Math.random() - 0.5) * 5; 
-        // Fuerza de salto hacia ARRIBA (valores negativos en canvas suben)
-        this.vy = -(Math.random() * 8 + 14);  
-        
-        // Gravedad constante que los frena y luego los hace caer
-        this.gravity = 0.25; 
+        this.vx = (Math.random() - 0.5) * (4 * speedMultiplier);
+        // Velocidad hacia arriba que aumenta con el nivel
+        this.vy = -(Math.random() * 5 + (10 * speedMultiplier));
+        this.gravity = 0.2;
         this.markedForDeletion = false;
     }
 
     update() {
         this.x += this.vx;
         this.y += this.vy;
-        this.vy += this.gravity; // Aplica la física de caída
-
-        // Rebote en las paredes laterales
-        if (this.x - this.radius < 0 || this.x + this.radius > canvas.width) {
-            this.vx *= -1;
-        }
-
-        // Si caen nuevamente por el borde inferior (y están bajando), se eliminan
-        if (this.y > canvas.height + this.radius + 50 && this.vy > 0) {
-            this.markedForDeletion = true;
-        }
+        this.vy += this.gravity;
+        if (this.x - this.radius < 0 || this.x + this.radius > canvas.width) this.vx *= -1;
+        if (this.y > canvas.height + this.radius + 20 && this.vy > 0) this.markedForDeletion = true;
     }
 
-    draw(ctx) {
-        const imgToDraw = this.type === 'can' ? imgLata : imgPato;
-        
-        // Dibujar la imagen si ya se cargó en el navegador
-        if (imgToDraw.complete && imgToDraw.naturalWidth !== 0) {
-            ctx.drawImage(
-                imgToDraw, 
-                this.x - this.radius, 
-                this.y - this.radius, 
-                this.radius * 2, 
-                this.radius * 2
-            );
-        } else {
-            // Fallback: Si no hay imagen, dibuja un círculo temporal
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = this.type === 'can' ? 'silver' : 'brown';
-            ctx.fill();
-            ctx.closePath();
+    draw() {
+        const img = this.type === 'can' ? imgLata : imgPato;
+        if (img.complete) {
+            ctx.drawImage(img, this.x - this.radius, this.y - this.radius, this.radius*2, this.radius*2);
         }
     }
 }
 
-// Evento para eliminar objetos con el Mouse (Punto 3)
 canvas.addEventListener('mousedown', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    // Recorremos el arreglo de forma inversa para dar prioridad al objeto más al frente
     for (let i = targets.length - 1; i >= 0; i--) {
-        const target = targets[i];
-        
-        // Distancia entre el clic y el centro del objeto
-        const dx = mouseX - target.x;
-        const dy = mouseY - target.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+        const t = targets[i];
+        const dist = Math.sqrt((mouseX - t.x)**2 + (mouseY - t.y)**2);
 
-        // Si dimos en el blanco
-        if (distance <= target.radius) {
-            if (target.type === 'can') {
-                score += 100;
-            } else {
-                score -= 100;
-            }
-            scoreElement.innerText = score;
+        if (dist <= t.radius) {
+            score += (t.type === 'can' ? 100 : -100);
+            if (score < 0) score = 0;
             
-            // Eliminamos el objeto tocado
-            target.markedForDeletion = true;
-            break; // Salimos del ciclo para no eliminar dos objetos con un solo clic
+            checkLevel();
+            updateScoreUI();
+            t.markedForDeletion = true;
+            break;
         }
     }
 });
 
-function animate() {
-    // Es vital limpiar el canvas usando clearRect transparente
-    // para que el CSS del body (fondo y efecto cristal) siga siendo visible
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+function checkLevel() {
+    // Subir de nivel cada 500 puntos
+    let newLevel = Math.floor(score / 500) + 1;
+    if (newLevel > level) {
+        level = newLevel;
+        speedMultiplier += 0.2; // Aumenta velocidad
+        spawnRate = Math.max(20, 60 - (level * 5)); // Aparecen más seguido
+    }
+}
 
+function updateScoreUI() {
+    scoreDisplay.innerText = score;
+    levelDisplay.innerText = level;
+    if (score > highScore) {
+        highScore = score;
+        highScoreDisplay.innerText = highScore;
+        localStorage.setItem('duckHuntHighScore', highScore);
+    }
+}
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
     spawnTimer++;
-    if (spawnTimer % 45 === 0) { 
+    if (spawnTimer >= spawnRate) {
         targets.push(new Target());
         spawnTimer = 0;
     }
 
-    targets.forEach(target => {
-        target.update();
-        target.draw(ctx);
-    });
-
-    targets = targets.filter(target => !target.markedForDeletion);
-
+    targets.forEach(t => { t.update(); t.draw(); });
+    targets = targets.filter(t => !t.markedForDeletion);
+    
     requestAnimationFrame(animate);
 }
-
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
 
 animate();

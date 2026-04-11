@@ -4,48 +4,56 @@ body, html {
     width: 100%;
     height: 100%;
     
-    /* --- INTEGRACIÓN DE TU IMAGEN DE FONDO --- */
-    /* La ruta asume que el CSS está en assets/css/ y la imagen en assets/img/ */
-    background-image: url('../img/fondo.jpg');
-    background-size: cover; /* Hace que la imagen cubra toda la pantalla */
-    background-position: center; /* Centra la imagen */
-    background-repeat: no-repeat; /* Evita que la imagen se repita tipo mosaico */
+    /* Imagen de fondo del paisaje */
+    background-image: url('../img/paisaje.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     
     overflow: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Efecto Glassmorphism (Cristal) para el panel de puntos */
-.glass-panel {
-    background: rgba(255, 255, 255, 0.15); 
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px); 
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+/* Contenedor principal del juego: Cuadrado perfecto al 60% y opaco */
+#game-container {
+    width: 60vmin;
+    height: 60vmin;
+    
+    /* Fondo casi completamente oscuro para resaltar los objetivos */
+    background: rgba(0, 0, 0, 0.95); 
+    
+    /* Bordes sutiles tipo cristal */
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    
+    /* Cursor personalizado de mira */
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="none" stroke="red" stroke-width="2"/><line x1="16" y1="0" x2="16" y2="32" stroke="red" stroke-width="2"/><line x1="0" y1="16" x2="32" y2="16" stroke="red" stroke-width="2"/></svg>') 16 16, crosshair;
 }
 
-#ui-container {
-    position: absolute;
-    top: 30px;
-    left: 30px;
-    padding: 15px 35px;
-    color: white;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.8); /* Sombra al texto para que resalte sobre el paisaje */
-    z-index: 10;
-    pointer-events: none; 
-}
-
-h1 {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 600;
-    letter-spacing: 1px;
-}
-
+/* Aseguramos que el canvas ocupe todo el cuadrado interior */
 canvas {
     display: block;
-    cursor: crosshair;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
+}
+
+/* Efecto Glassmorphism para las cajas de puntuación */
+.ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    pointer-events: none; /* Evita que el panel bloquee los clics para disparar */
+}
+
+.stats-box {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
 }
