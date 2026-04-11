@@ -8,11 +8,16 @@ const levelDisplay = document.getElementById('level'), cansDisplay = document.ge
 const overlay = document.getElementById('overlay-screen'), startBtn = document.getElementById('start-btn'), restartBtn = document.getElementById('restart-btn');
 const contentStart = document.getElementById('content-start'), contentGameOver = document.getElementById('content-gameover'), reasonText = document.getElementById('gameover-reason');
 
+// Elementos de la transición de nivel
+const levelUpScreen = document.getElementById('level-up-screen');
+const levelUpText = document.getElementById('level-up-text');
+
 function resize() { canvas.width = container.clientWidth; canvas.height = container.clientHeight; }
 window.addEventListener('resize', resize); resize();
 
 // Estado del Juego
-let score = 0, highScore = localStorage.getItem('hs_itp') || 0, level = 1, isPlaying = false;
+let score = 0, highScore = localStorage.getItem('hs_itp') || 0, level = 1;
+let isPlaying = false, isTransitioning = false; // Nueva bandera de pausa
 let cansShot = 0, ducksShot = 0, consecutiveDucks = 0, targets = [], floatTexts = [];
 let spawnTimer = 0, spawnRate = 60, speedMult = 1;
 
@@ -43,7 +48,7 @@ class Target {
         this.vx = (Math.random() - 0.5) * (5 * speedMult);
         this.vy = -(Math.random() * 5 + (13 * speedMult));
         this.gravity = 0.25;
-        this.hitTimer = 0; // Para el parpadeo
+        this.hitTimer = 0; 
         this.marked = false;
     }
     update() {
@@ -54,7 +59,7 @@ class Target {
     }
     draw() {
         ctx.save();
-        if (this.hitTimer > 0) { // Efecto parpadeo
+        if (this.hitTimer > 0) { 
             ctx.shadowBlur = 20;
             ctx.shadowColor = this.type === 'can' ? '#00ff00' : '#ff0000';
             ctx.filter = `brightness(2) sepia(1) hue-rotate(${this.type === 'can' ? '90deg' : '0deg'})`;
@@ -72,7 +77,9 @@ function gameOver(reason) {
 }
 
 canvas.addEventListener('mousedown', (e) => {
-    if (!isPlaying) return;
+    // Si no está jugando o está en pausa de nivel, ignorar clics
+    if (!isPlaying || isTransitioning) return;
+    
     const r = canvas.getBoundingClientRect();
     const mx = (e.clientX - r.left) * (canvas.width / r.width), my = (e.clientY - r.top) * (canvas.height / r.height);
 
@@ -97,13 +104,43 @@ canvas.addEventListener('mousedown', (e) => {
 
 function updateUI() {
     scoreDisplay.innerText = score; cansDisplay.innerText = cansShot; ducksDisplay.innerText = ducksShot;
-    level = Math.floor(score / 500) + 1; levelDisplay.innerText = level;
-    speedMult = 1 + (level - 1) * 0.15; spawnRate = Math.max(15, 60 - level * 5);
+    
+    // Calcular el nivel actual
+    let newLevel = Math.floor(score / 500) + 1;
+    
+    // Lógica para detectar el paso de nivel
+    if (newLevel > level) {
+        level = newLevel;
+        speedMult = 1 + (level - 1) * 0.15; 
+        spawnRate = Math.max(15, 60 - level * 5);
+        
+        // --- INICIA TRANSICIÓN DE NIVEL ---
+        isTransitioning = true;
+        levelUpText.innerText = 'Nivel ' + level;
+        
+        // Muestra la pantalla negra con clases de Bootstrap
+        levelUpScreen.classList.remove('d-none');
+        levelUpScreen.classList.add('d-flex');
+        
+        // Limpia la pantalla de objetos viejos
+        targets = [];
+        floatTexts = [];
+        
+        // Pausa de 2 segundos (2000 ms)
+        setTimeout(() => {
+            levelUpScreen.classList.remove('d-flex');
+            levelUpScreen.classList.add('d-none');
+            isTransitioning = false; // Reanuda el juego
+        }, 2000);
+    }
+    
+    levelDisplay.innerText = level;
     if (score > highScore) { highScore = score; highScoreDisplay.innerText = highScore; localStorage.setItem('hs_itp', highScore); }
 }
 
 function initGame() {
     score = 0; level = 1; cansShot = 0; ducksShot = 0; consecutiveDucks = 0; targets = []; floatTexts = [];
+    isTransitioning = false;
     isPlaying = true; overlay.style.display = 'none'; updateUI(); animate();
 }
 
@@ -112,11 +149,20 @@ restartBtn.onclick = initGame;
 
 function animate() {
     if (!isPlaying) return;
+    
+    // Si está en transición, sigue ejecutando requestAnimationFrame pero NO actualiza nada
+    if (isTransitioning) {
+        requestAnimationFrame(animate);
+        return;
+    }
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     spawnTimer++;
     if (spawnTimer >= spawnRate) { targets.push(new Target()); spawnTimer = 0; }
+    
     targets.forEach(t => { t.update(); t.draw(); });
     floatTexts.forEach((ft, i) => { ft.update(); ft.draw(); if (ft.opacity <= 0) floatTexts.splice(i, 1); });
+    
     targets = targets.filter(t => !t.marked);
     requestAnimationFrame(animate);
 }

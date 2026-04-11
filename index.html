@@ -22,8 +22,8 @@
     <div class="container-fluid d-flex justify-content-center align-items-center vh-100">
         <div id="game-container" class="position-relative overflow-hidden d-flex">
             
-            <div class="ui-overlay d-flex justify-content-between p-3 w-100">
-                <div class="stats-box text-white">
+            <div class="ui-overlay d-flex justify-content-between p-3 w-100 align-items-start">
+                <div class="stats-box text-white text-center">
                     <p class="m-0 small text-uppercase fw-bold">Nivel: <span id="level">1</span></p>
                     <h3 class="m-0 fw-bold text-success">Puntos: <span id="score">0</span></h3>
                 </div>
@@ -43,6 +43,10 @@
                     <span class="fs-4">🦆</span>
                     <p class="m-0 fw-bold text-danger" id="count-ducks">0</p>
                 </div>
+            </div>
+
+            <div id="level-up-screen" class="position-absolute top-0 start-0 w-100 h-100 justify-content-center align-items-center d-none" style="background: rgba(0,0,0,0.8); z-index: 90;">
+                <h1 class="text-white display-1 fw-bold text-uppercase" id="level-up-text" style="text-shadow: 4px 4px 15px #000; letter-spacing: 5px;">Nivel 1</h1>
             </div>
 
             <div id="overlay-screen" class="position-absolute top-50 start-50 translate-middle text-center text-white p-4">
