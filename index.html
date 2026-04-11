@@ -12,7 +12,7 @@
 
     <div class="container-fluid d-flex justify-content-center align-items-center vh-100">
         
-        <div id="game-container" class="position-relative overflow-hidden">
+        <div id="game-container" class="position-relative overflow-hidden d-flex">
             
             <div class="ui-overlay d-flex justify-content-between p-3 w-100">
                 <div class="stats-box text-white">
@@ -25,25 +25,34 @@
                 </div>
             </div>
 
+            <div id="sidebar-stats" class="text-white p-3 glass-panel">
+                <h6 class="text-uppercase fw-bold border-bottom pb-2 mb-3 small">Cacería Total</h6>
+                <div class="mb-3 text-center">
+                    <span class="fs-4">🥫</span>
+                    <p class="m-0 fw-bold text-success" id="count-cans">0</p>
+                    <small class="opacity-75">Latas</small>
+                </div>
+                <div class="text-center">
+                    <span class="fs-4">🦆</span>
+                    <p class="m-0 fw-bold text-danger" id="count-ducks">0</p>
+                    <small class="opacity-75">Patos</small>
+                </div>
+            </div>
+
             <div id="instructions-screen" class="position-absolute top-50 start-50 translate-middle text-center text-white p-4">
                 <h2 class="fw-bold mb-3 text-warning">🎯 Instrucciones</h2>
                 <p class="fs-5">¡Demuestra tu puntería!</p>
-                
                 <div class="d-flex justify-content-around align-items-center my-4 bg-black bg-opacity-25 p-3 rounded">
                     <div>
                         <span class="fs-1">🥫</span>
                         <p class="text-success fw-bold m-0">+100 Pts</p>
-                        <small>¡Dispárales!</small>
                     </div>
                     <div>
                         <span class="fs-1">🦆</span>
                         <p class="text-danger fw-bold m-0">-100 Pts</p>
-                        <small>¡Evítalos!</small>
                     </div>
                 </div>
-                
-                <p class="small text-light">Sube de nivel y aumenta la dificultad cada 500 puntos.</p>
-                <button id="start-btn" class="btn btn-warning btn-lg fw-bold mt-3 px-5 rounded-pill shadow text-dark">¡Empezar a Jugar!</button>
+                <button id="start-btn" class="btn btn-warning btn-lg fw-bold mt-3 px-5 rounded-pill shadow text-dark">¡Empezar!</button>
             </div>
 
             <canvas id="gameCanvas"></canvas>
