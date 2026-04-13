@@ -103,7 +103,7 @@ function updateUI() {
     scoreDisplay.innerText = score; cansDisplay.innerText = cansShot; ducksDisplay.innerText = ducksShot;
     let newLevel = Math.floor(score / 500) + 1;
     if (newLevel > level) {
-        level = newLevel; speedMult = 1 + (level - 1) * 0.15; spawnRate = Math.max(15, 60 - level * 5);
+        level = newLevel; speedMult = 0.8 + (level - 1) * 0.08; spawnRate = Math.max(15, 90 - level * 5);
         isTransitioning = true; levelUpText.innerText = 'Nivel ' + level;
         levelUpScreen.classList.remove('d-none'); levelUpScreen.classList.add('d-flex');
         targets = []; floatTexts = [];
